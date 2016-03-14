@@ -10,17 +10,17 @@ texttospeech.init(callback)
 Must be callled before using any other Text To Speech functions.
 
 callback(event) - called on initialization complete.
-    isError - boolean, true if there was any error.
-    engines - table, a list of available engines. Key - engine label, value - engine package name. Requires Android 4.0+.
-    defaultEngine - string, package name of the default engine. Android only.
+    event.isError - boolean, true if there was any error.
+    event.engines - table, a list of available engines. Key - engine label, value - engine package name. Requires Android 4.0+.
+    event.defaultEngine - string, package name of the default engine. Android only.
 
 
 texttospeech.getLanguagesAndVoices(), table
 
-Returns a list of available languages and voices for current engine. Requires Android 5.0+.
+Returns a list of available languages and voices for current engine. On Android requires Android 5.0+.
 
 table.languages - array of strings, a list of languages.
-table.voices - table, a list of voices. Key - voice name, value - voice language.
+table.voices - table, a list of voices. Key - voice name, value - voice language. On iOS there can be iether one or two voices: 'default' and 'alex'. Alex is Siri's voice and only available on iOS 9+.
 
 
 texttospeech.setEngine(engine), boolean
@@ -38,10 +38,15 @@ text - string, text to be spoken.
 options.language - string, language to be used, like 'ru-RU', 'fr-FR'. Default is 'en-US'.
 options.voice - string, voice to be used. Requires Android 5.0+.
 options.pitch - float, alter the pitch of the voice, value from 0.5 to 2.0. Default is 1.0.
-options.rate - float, adjust speaking speed, value from 0.5 to 2.0. Default is 1.0.
+options.rate - float, adjust speaking speed. Android value from 0.5 to 2.0, default is 1.0. iOS value - no idea, it's a mess.
 options.volume - float, set volume of the voice, value from 0.0 to 1.0. Default is 1.0.
-options.onComplete(id) - function, called when speach has ended.
 option.id - string, optional id for the text, passed to onComplete. If not supplied - a random value.
+options.onComplete(id) - function, called when speech has ended.
+
+
+texttospeech.isSpeaking(), boolean
+
+Returns true if currently speaking.
 
 
 texttospeech.stop()
@@ -63,14 +68,14 @@ texttospeech.init(function(event)
                 print('Engines:', json.prettify(event.engines))
             end
             print('Default engine:', event.defaultEngine)
+        end
 
-            if apiLevel >= 21 then
-                local languagesAndVoices = texttospeech.getLanguagesAndVoices()
-                print('Languages and voices:', json.prettify(languagesAndVoices))
-            end
+        if platform == 'iPhone OS' or (platform == 'Android' and apiLevel >= 21) then
+            local languagesAndVoices = texttospeech.getLanguagesAndVoices()
+            print('Languages and voices:', json.prettify(languagesAndVoices))
         end
     else
-        print('Error initiating Text To Speech')
+        print('Error initializing Text To Speech')
     end
 end)
 
@@ -80,11 +85,12 @@ local x, y = display.contentCenterX, display.contentCenterY
 local w, h = display.contentWidth * 0.8, 50
 
 widget.newButton{
-    x = x, y = y - 100,
+    x = x, y = y - 120,
     width = w, height = h,
     label = 'Speak',
     onRelease = function()
         texttospeech.speak('Nobody expects the Spanish Inquisition! Our chief weapon is surprise, surprise and fear, fear and surprise, our two weapons are fear and surprise, and ruthless efficiency.', {
+            --voice = 'alex', -- iOS 9.0+
             onComplete = function(id)
                 print('Speech "' .. id .. '" has ended.')
             end
@@ -92,7 +98,7 @@ widget.newButton{
     end}
 
 widget.newButton{
-    x = x, y = y,
+    x = x, y = y - 40,
     width = w, height = h,
     label = 'Speak Russian',
     onRelease = function()
@@ -110,7 +116,15 @@ widget.newButton{
     end}
 
 widget.newButton{
-    x = x, y = y + 100,
+    x = x, y = y + 40,
+    width = w, height = h,
+    label = 'Is speaking?',
+    onRelease = function()
+        native.showAlert('Is speaking?', texttospeech.isSpeaking() and 'Yes' or 'No', {'OK'})
+    end}
+
+widget.newButton{
+    x = x, y = y + 120,
     width = w, height = h,
     label = 'Stop',
     onRelease = function()
