@@ -39,8 +39,10 @@ options.language - string, language to be used, like 'ru-RU', 'fr-FR'. Default i
 options.voice - string, voice to be used. Requires Android 5.0+.
 options.pitch - float, alter the pitch of the voice, value from 0.5 to 2.0. Default is 1.0.
 options.rate - float, adjust speaking speed. Android value from 0.5 to 2.0, default is 1.0. iOS value - no idea, it's a mess.
-options.volume - float, set volume of the voice, value from 0.0 to 1.0. Default is 1.0.
-option.id - string, optional id for the text, passed to onComplete. If not supplied - a random value.
+options.volume - float, set volume of the voice, value from 0.0 to 1.0. Default is 1.0. On Android requires Android 3.0+.
+option.id - string, optional id for the text, passed to callbacks. If not supplied - a random value.
+options.onStart(id) - function, called when speech has started. On Android requires Android 4.0.3+.
+options.onProgress(id, start, count) - function, called when speech portion is about to be spoken. start and count indicate the portion of the original UTF-8 text. iOS only.
 options.onComplete(id) - function, called when speech has ended.
 
 
@@ -89,8 +91,15 @@ widget.newButton{
     width = w, height = h,
     label = 'Speak',
     onRelease = function()
-        texttospeech.speak('Nobody expects the Spanish Inquisition! Our chief weapon is surprise, surprise and fear, fear and surprise, our two weapons are fear and surprise, and ruthless efficiency.', {
+        local text = 'Nobody expects the Spanish Inquisition! Our chief weapon is surprise, surprise and fear, fear and surprise, our two weapons are fear and surprise, and ruthless efficiency.'
+        texttospeech.speak(text, {
             --voice = 'alex', -- iOS 9.0+
+            onStart = function(id)
+                print('Speech "' .. id .. '" has started.')
+            end,
+            onProgress = function(id, start, count)
+                print('Speech "' .. id .. '" progress: ' .. text:sub(start, start + count))
+            end,
             onComplete = function(id)
                 print('Speech "' .. id .. '" has ended.')
             end
@@ -102,13 +111,21 @@ widget.newButton{
     width = w, height = h,
     label = 'Speak Russian',
     onRelease = function()
-        texttospeech.speak('Ну и гадость же эта ваша заливная рыба.', {
+        local text = 'Ну и гадость же эта ваша заливная рыба.'
+        texttospeech.speak(text, {
             language = 'ru-RU',
             --voice = 'ru-RU-locale', -- Optional. Has effect only on Android 5.0+
             pitch = 0.8,
             rate = 0.6,
             volume = 0.9,
             id = 'fish',
+            onStart = function(id)
+                print('Speech "' .. id .. '" has started.')
+            end,
+            onProgress = function(id, start, count)
+                -- Simple string.sub() won't work for UTF-8 strings, use UTF-8 plugin
+                print('Speech "' .. id .. '" progress: start - ' .. start .. ', count - ' .. count)
+            end,
             onComplete = function(id)
                 print('Speech "' .. id .. '" has ended.')
             end
