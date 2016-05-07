@@ -74,7 +74,9 @@ texttospeech.init(function(event)
 
         if platform == 'iPhone OS' or (platform == 'Android' and apiLevel >= 21) then
             local languagesAndVoices = texttospeech.getLanguagesAndVoices()
-            print('Languages and voices:', json.prettify(languagesAndVoices))
+            if languagesAndVoices then
+                print('Languages and voices:', json.prettify(languagesAndVoices))
+            end
         end
     else
         print('Error initializing Text To Speech')
@@ -87,7 +89,7 @@ local x, y = display.contentCenterX, display.contentCenterY
 local w, h = display.contentWidth * 0.8, 50
 
 widget.newButton{
-    x = x, y = y - 120,
+    x = x, y = y - 200,
     width = w, height = h,
     label = 'Speak',
     onRelease = function()
@@ -107,7 +109,7 @@ widget.newButton{
     end}
 
 widget.newButton{
-    x = x, y = y - 40,
+    x = x, y = y - 120,
     width = w, height = h,
     label = 'Speak Russian',
     onRelease = function()
@@ -133,7 +135,7 @@ widget.newButton{
     end}
 
 widget.newButton{
-    x = x, y = y + 40,
+    x = x, y = y - 40,
     width = w, height = h,
     label = 'Is speaking?',
     onRelease = function()
@@ -141,9 +143,30 @@ widget.newButton{
     end}
 
 widget.newButton{
-    x = x, y = y + 120,
+    x = x, y = y + 40,
     width = w, height = h,
     label = 'Stop',
     onRelease = function()
         texttospeech.stop()
     end}
+
+widget.newButton{
+    x = x, y = y + 120,
+    width = w, height = h,
+    label = 'Get lang/voices',
+    onRelease = function()
+        local languagesAndVoices = texttospeech.getLanguagesAndVoices()
+        if languagesAndVoices then
+            print('Languages and voices:', json.prettify(languagesAndVoices))
+        end
+    end}
+
+if platform == 'Android' then
+    widget.newButton{
+        x = x, y = y + 200,
+        width = w, height = h,
+        label = 'Set Pico TTS',
+        onRelease = function()
+            native.showAlert('Success?', texttospeech.setEngine('com.svox.pico') and 'Yes' or 'No', {'OK'})
+        end}
+end
